@@ -1,35 +1,26 @@
-# -*- coding:utf-8 -*-
-
-import BaseHTTPServer
-
-class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-	'''处理请求并返回页面'''
-
-	#页面模板
-	Page = '''\
-		<html>
-		<body>
-		<p>hello,web!</p>
-		</body>
-		</html>
-	'''
-
-	#处理get请求
-	def do_GET(self):
-		self.send_response(200)#send_response（）：发送应答消息和状态码
-		self.send_header("content-Type","text/html")
-		self.send_header("Content-Length",str(len(self.Page)))
-		self.end_headers()
-		#wfile：wfile 是一个输出流，用来回写响应，回写的数据必须遵守 HTTP 协议的格式
-		self.wfile.write(self.Page)
-
-# ---------------------------------------------------------
-if __name__=='__main':#直接执行这个脚本时才会向下执行，脚本由其他脚本引入不执行
-	serverAddress=('',8080)#服务器地址
-	#client_address客户端的地址，存放在一个 tuple 里 (host, port)
-	server = BaseHTTPServer.HTTPServer(serverAddress,RequestHandler)#创建server 实例
-	server.serve_forever()#不停的执行server
+import socket
+ 
+HOST, PORT = '', 8888
+#WEB服务器创建一个监听socket然后开始循环接受新连接 
+listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)#创建套接字，类型 网络通信，tcp
+listen_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)#设置给定套接字选项的值。SOL_SOCKET: 基本套接口
+listen_socket.bind((HOST, PORT))
+listen_socket.listen(1)#监听传入的连接
+print 'Serving HTTP on port %s ...' % PORT
+#开始循环接受新连接
+while True:
+    client_connection, client_address = listen_socket.accept()#接收连接，返回客户端新的套接字，客户端地址
+    #客户端初始化一个TCP连接
+    request = client_connection.recv(1024)#客户端套接字，接受tcp数据，以字符串形式返回
+    print request
+ 
+    http_response = """
+HTTP/1.1 200 OK
+Hello, World!
+"""
+	#服务器响应
+    client_connection.sendall(http_response)#发送tcp数据，发送到连接的服务器套接字，成功None
+    client_connection.close()#关闭客户端的套接字
 
 
-#send_response（）：发送应答消息和状态码
-#wfile：wfile 是一个输出流，用来回写响应，回写的数据必须遵守 HTTP 协议的格式
+#服务器套接字accept（）接受tcp连接---->数据---->客户端socket--->服务器socket--->关闭
